@@ -1,0 +1,21 @@
+CREATE TABLE `staff` (
+    `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '工号',
+    `name` varchar(64) NOT NULL DEFAULT '_' COMMENT '姓名',
+    `cardnum` varchar(64) NOT NULL DEFAULT '_' COMMENT '身份证号',
+    `mobile` varchar(16) NOT NULL DEFAULT '_' COMMENT '手机号',
+    `email` varchar(32) NOT NULL DEFAULT '_' COMMENT '邮箱',
+    `sex` tinyint(1) NOT NULL DEFAULT 0 COMMENT '0女1男',
+    `province` varchar(24) NOT NULL DEFAULT '_' COMMENT '省',
+    `city` varchar(24) NOT NULL DEFAULT '_' COMMENT '市',
+    `area` varchar(24) NOT NULL DEFAULT '_' COMMENT '区',
+    `nation` varchar(12) NOT NULL DEFAULT '_' COMMENT '民族',
+    `birth` datetime NOT NULL COMMENT '生日',
+    `marriage` tinyint(1) NOT NULL  DEFAULT 0 COMMENT '0未婚1已婚2离异',
+    `department` varchar(64) NOT NULL DEFAULT '_' COMMENT '部门',
+    `job` varchar(64) NOT  NULL DEFAULT '_' COMMENT '职位',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `cardnum` (`cardnum`),
+    UNIQUE KEY `mobile` (`mobile`),
+    UNIQUE KEY `email` (`email`),
+    KEY `sex` (`sex`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='职工表';
