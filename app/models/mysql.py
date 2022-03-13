@@ -27,7 +27,7 @@ certificate = sqlalchemy.Table(
     metadata,
     sqlalchemy.Column("c_id", sqlalchemy.Integer, primary_key=True),
     sqlalchemy.Column("c_name", sqlalchemy.String(length=64)),
-    sqlalchemy.Column("c_img", sqlalchemy.String(length=64)),
+    sqlalchemy.Column("c_imgpath", sqlalchemy.String(length=64)),
     sqlalchemy.Column("s_id", sqlalchemy.Integer,
                       sqlalchemy.ForeignKey('staff.id')),
 )

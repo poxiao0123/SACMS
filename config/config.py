@@ -1,14 +1,19 @@
 class Config:
     def __init__(self) -> None:
         self.env = ""
-        self.project = ""
+        self.project = "SACMS"
+        self.db_host = "139.9.172.203"
+        self.db_name = "sacms",
+        self.db_user = "sacms",
+        self.db_pass = "159630sk"
 
     def get_configcenter_info(self):  # 从配置中心返回配置数据
         res = {
-            "mysql": "mysql://root:159630sk@192.168.159.134/test",
+            "mysql": "mysql://sacms:159630sk@139.9.172.203/sacms",
             "USERNAME": "lwl_0123@yeah.net",
             "PASSWORD": "111111",
         }
+        print(res)
         return res
 
 
