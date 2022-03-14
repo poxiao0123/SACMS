@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from databases import Database
 from orjson import dumps
 from sanic import Sanic
