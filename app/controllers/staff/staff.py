@@ -1,3 +1,5 @@
+from importlib.metadata import requires
+
 from app.services import services
 from sanic import Blueprint
 from sanic.response import json
@@ -23,14 +25,14 @@ async def remove(request):
         return json({"code": -1, "msg": "删除失败"})
 
 
-@staff.get("/list")  # 获取员工详细信息1
-@validate_args(
+@staff.post("/list")  # 获取员工详细信息1
+@validate_json(
     {
         "id": {"type": "string", "required": True},  # 职工号
     }
 )
 async def lists(request):
-    row = {"id": int(request.args.get("id"))}
+    row = {"id": int(request.json.get("id"))}
     res = await services.staff.list(request, row)
     if res:
         return json({"code": 0, "msg": "查询成功", "data": res})
@@ -58,8 +60,8 @@ async def lists(request):
         "city": {"type": "string", "required": True},
         "area": {"type": "string", "required": True},
         "nation": {"type": "string", "required": True},
-        "birth": {"type": "string", "required": True},
         "marriage": {"type": "integer", "required": True},
+        "birth" : {"type": "string", "required":True},
         "department": {"type": "string", "required": True},
         "job": {"type": "string", "required": True},
     }
@@ -80,11 +82,15 @@ async def add(request):
         "department": request.json.get("department"),
         "job": request.json.get("job"),
     }
+    row["birth"] = row["birth"].split("T")[0]
     res = await services.staff.add(request, row)
-    if res:
+    print(res)
+    if res == 0:
         return json({"code": 0, "msg": "添加成功"})
+    elif res == -1:
+        return json({"code": -1, "msg": "重复添加"})
     else:
-        return json({"code": -1, "msg": "添加失败"})
+        return json({"code": -2, "msg": "添加失败"})
 
 
 @staff.post("/change")  # 修改职工信息 1
@@ -121,3 +127,14 @@ async def change(request):
         return json({"code": 0, "msg": "修改成功"})
     else:
         return json({"code": -1, "msg": "修改失败"})
+
+
+@staff.post("/lists")
+@validate_json(
+    {
+        "list_type" : {"type":"integer", "required": True},
+        "page": {"type":"integer","required":True}
+    }
+)
+async def getStaffLists(request):
+    ...

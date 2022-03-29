@@ -10,11 +10,14 @@ class Staff:  # 员工类 1
         try:
             query = staff.insert().values(**row)
             print(query)
-            res = await conn.execute(query=query)
-            return True if res > 0 else False
+            await conn.execute(query=query)
+            return 0
         except Exception as e:
-            print(e)
-            return False
+            print(type(e))
+            if "Duplicate" in str(e):
+                return -1
+            else:
+                return -2
 
     async def list(self, request, row):  # 获取员工详细信息 1
         conn = request.app.ctx.db
