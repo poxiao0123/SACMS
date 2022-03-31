@@ -1,10 +1,35 @@
-from sanic.response import json
+from functools import wraps
+from urllib import response
+
+import jwt
+from sanic import json
 
 
 async def check_auth(request):
-    if (
-        request.form.get("username") != request.app.config.custom["USERNAME"] or request.form.get("password") != request.app.config.custom["PASSWORD"]
-    ):
-        return json({"code": -1, "msg": "账号或密码不正确"})
+    if not request.token:
+        return False
+    try:
+        jwt.decode(
+            request.token, request.app.config.custom.SECRET, algorithms=["HS256"]
+        )
+    except jwt.exceptions.InvalidTokenError:
+        return False
     else:
-        return json({"code": 0, "msg": "验证成功"})
+        return True
+
+def protected(wrapped):
+    def decorator(f):
+        @wraps(f)
+        async def decorated_function(request, *args, **kwargs):
+            is_authenticated = check_auth(request)
+
+            if is_authenticated:
+                response = await f(request, *args, **kwargs)
+                return response
+            else: 
+                return json({
+                    "code": -1,
+                    "msg": "you are unauthorized"
+                }, status=401)
+        return decorated_function
+    return decorator(wrapped)

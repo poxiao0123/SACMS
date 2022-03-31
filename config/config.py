@@ -6,12 +6,14 @@ class Config:
         self.db_name = "sacms",
         self.db_user = "sacms",
         self.db_pass = "159630sk"
+        self.SECRET = "poxiao"
 
     def get_configcenter_info(self):  # 从配置中心返回配置数据
         res = {
             "mysql": "mysql://sacms:159630sk@139.9.172.203/sacms",
             "USERNAME": "lwl_0123@yeah.net",
             "PASSWORD": "111111",
+            "SECRET": "poxiao"
         }
         print(res)
         return res

@@ -1,3 +1,6 @@
+import re
+
+import jwt
 from sanic import Blueprint
 from sanic.response import json
 from sanic_validation import validate_json
@@ -22,4 +25,5 @@ async def admin_login(request):
     ):
         return json({"code": -1, "msg": "账号或密码不正确"})
     else:
+        token = jwt.encode({}, request.app.config.custom.SECRET)
         return json({"code": 0, "msg": "验证成功"})
