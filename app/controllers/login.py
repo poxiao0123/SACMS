@@ -1,5 +1,3 @@
-import re
-
 import jwt
 from sanic import Blueprint
 from sanic.response import json

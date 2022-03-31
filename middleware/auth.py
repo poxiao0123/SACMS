@@ -1,5 +1,4 @@
 from functools import wraps
-from urllib import response
 
 import jwt
 from sanic import json
@@ -16,6 +15,7 @@ async def check_auth(request):
         return False
     else:
         return True
+
 
 def protected(wrapped):
     def decorator(f):
