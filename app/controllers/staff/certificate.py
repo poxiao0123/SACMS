@@ -8,7 +8,7 @@ from this import d
 certificate = Blueprint("certificate", url_prefix="/staff/certificate")
 
 
-@certificate.get("/remove")  # 移除证件 1
+@certificate.post("/remove")  # 移除证件 1
 @validate_args(
     {
         "c_id": {"type": "string", "required": True},
@@ -25,11 +25,11 @@ async def remove(request):
         return json({"code": -1, "msg": "删除失败"})
 
 
-@certificate.get("/list")  # 获取证件
+@certificate.post("/list")  # 获取证件
 async def lists(request):
-    c_id = request.args.get("c_id")
-    c_name = request.args.get("c_name")
-    s_id = request.args.get("s_id")
+    c_id = request.json.get("c_id")
+    c_name = request.json.get("c_name")
+    s_id = request.json.get("s_id")
     res = None
     if c_id:
         res = await services.certificate.list_by_c_id(request, c_id)

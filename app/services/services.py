@@ -63,6 +63,12 @@ class Staff:  # 员工类 1
             print(e)
             return False
 
+    async def count(self, request):
+        conn = request.app.ctx.db
+        query = (
+            select()
+        )
+        return res
 
 class Certificate:
     async def add(self, request, c_imgs, row):  # 添加员工证件 1
