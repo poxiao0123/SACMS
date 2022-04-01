@@ -1,6 +1,5 @@
-from importlib.metadata import requires
-
 from app.services import services
+from middleware.auth import protected
 from sanic import Blueprint
 from sanic.response import json
 from sanic_validation import validate_args, validate_json
@@ -55,12 +54,12 @@ async def lists(request):
             "regex": r"^1[3456789]\d{9}$",  # 正则匹配手机号
         },
         "email": {"type": "string", "required": True},
-        "sex": {"type": "integer", "required": True, "allowed": [0, 1]},
+        "sex": {"type": "string", "required": True},
         "province": {"type": "string", "required": True},
         "city": {"type": "string", "required": True},
         "area": {"type": "string", "required": True},
         "nation": {"type": "string", "required": True},
-        "marriage": {"type": "integer", "required": True},
+        "marriage": {"type": "string", "required": True},
         "birth" : {"type": "string", "required":True},
         "department": {"type": "string", "required": True},
         "job": {"type": "string", "required": True},
@@ -109,7 +108,7 @@ async def add(request):
             "regex": r"^1[3456789]\d{9}$",  # 正则匹配手机号
         },
         "email": {"type": "string", "required": False},
-        "marriage": {"type": "integer", "required": False},
+        "marriage": {"type": "string", "required": False},
         "department": {"type": "string", "required": False},
         "job": {"type": "string", "required": False},
     }
@@ -129,7 +128,8 @@ async def change(request):
         return json({"code": -1, "msg": "修改失败"})
 
 
-@staff.post("/lists")
+@staff.post("/lists")  # 获取职工列表
+@protected
 @validate_json(
     {
         "list_type" : {"type":"integer", "required": True},
@@ -138,3 +138,7 @@ async def change(request):
 )
 async def getStaffLists(request):
     ...
+
+@staff.get("/test")  # 测试token过期
+@protected
+async def test(request):    return json({'code': 0, 'msg': 'token验证成功'})

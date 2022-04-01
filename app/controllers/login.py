@@ -1,3 +1,6 @@
+from datetime import datetime
+from time import time
+
 import jwt
 from sanic import Blueprint
 from sanic.response import json
@@ -23,5 +26,25 @@ async def admin_login(request):
     ):
         return json({"code": -1, "msg": "账号或密码不正确"})
     else:
-        token = jwt.encode({}, request.app.config.custom.SECRET)
-        return json({"code": 0, "msg": "验证成功"})
+        current_time = time()
+        # current_time = datetime.now()
+        print(current_time)
+        header = {
+            'typ': 'JWT',
+            'alg': 'HS256'
+        }
+        payload = {
+            'iat': current_time,
+            'exp': current_time + 10800,
+        }
+        token = jwt.encode(payload=payload, key=request.app.config.custom["SECRET"], algorithm=['HS256'], headers=header)
+        print(token)
+        return json(
+            {
+                'code': 0,
+                'msg': '登录成功',
+                'data': {
+                    'token': token
+                }
+            }
+        )
