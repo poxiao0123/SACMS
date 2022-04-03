@@ -1,7 +1,7 @@
 import os
 
 from app.models.mysql import certificate, staff
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 
 class Staff:  # 员工类 1
@@ -63,12 +63,23 @@ class Staff:  # 员工类 1
             print(e)
             return False
 
-    async def count(self, request):
+
+    async def count(self, request):  # 获取员工表和证件表总数
         conn = request.app.ctx.db
-        query = (
-            select()
+        staffquery = (
+            select(func.count(["*"]))
+            .select_from(staff)
         )
-        return res
+        staffres = await conn.fetch_one(query=staffquery)
+        certquery = (
+            select(func.count(["*"]))
+            .select_from(certificate)
+        )
+        certres = await conn.fetch_one(query=certquery)
+        return {
+            "staffcount":staffres[0],
+            "certcount": certres[0]
+        }
 
 class Certificate:
     async def add(self, request, c_imgs, row):  # 添加员工证件 1

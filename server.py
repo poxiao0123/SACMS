@@ -5,8 +5,7 @@ from sanic import Sanic
 
 from app.routes import routes
 from config.config import config
-
-# from middleware.auth import check_auth
+from middleware.auth import check_token
 
 # 将默认的json换成orjson
 app = Sanic("SACMS", dumps=dumps)
@@ -35,7 +34,7 @@ async def shutdown_db(app, loop):
 app.ctx.db = database
 
 # # 中间件， 注册到request上
-# app.register_middleware(check_auth, "request")
+app.register_middleware(check_token, "request")
 
 # 蓝图，路由
 app.blueprint(routes)

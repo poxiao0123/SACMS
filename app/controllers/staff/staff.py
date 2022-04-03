@@ -1,5 +1,5 @@
 from app.services import services
-from middleware.auth import protected
+# from middleware.auth import protected
 from sanic import Blueprint
 from sanic.response import json
 from sanic_validation import validate_args, validate_json
@@ -8,7 +8,7 @@ staff = Blueprint("staff", url_prefix="/staff/")
 
 
 @staff.get("/remove")  # 删除员工1
-@protected
+# @protected
 @validate_args(
     {
         "id": {"type": "string", "required": True},
@@ -26,7 +26,7 @@ async def remove(request):
 
 
 @staff.post("/list")  # 获取员工详细信息1
-@protected
+# @protected
 @validate_json(
     {
         "id": {"type": "string", "required": True},  # 职工号
@@ -42,7 +42,7 @@ async def lists(request):
 
 
 @staff.post("/add")  # 添加职工1
-@protected
+# @protected
 @validate_json(
     {
         "name": {"type": "string", "required": True},
@@ -96,7 +96,7 @@ async def add(request):
 
 
 @staff.post("/change")  # 修改职工信息 1
-@protected
+# @protected
 @validate_json(
     {
         "id": {"type": "integer", "required": True},
@@ -131,34 +131,25 @@ async def change(request):
     else:
         return json({"code": -1, "msg": "修改失败"})
 
-@staff.get("/countstaff")  # 获取职工数目
-@protected
-async def getStaffCount(request):
-    res = await services.staff.count(request)
-    if res:
-        return json({"code": 0, "msg": "获取成功", "data": res})
-    else:
-        return json({"code": 0, "msg": "获取失败"})
-
-
 
 @staff.post("/lists")  # 获取职工列表
-@protected
+# @protected
 @validate_json(
     {
-        "curpage": {"type": "integer", "required": False},  # 当前第几页
+        "currentpage": {"type": "integer", "required": False},  # 当前第几页
         "listrows": {"type": "integer", "required": False},  # 每页多少行
     }
 )
 async def getStaffLists(request):
     row = {
-        "curpage": int(request.json.get("curpage", 1)),
+        "curpage": int(request.json.get("currentpage", 1)),
         "listrows": int(request.json.get("listrows", 10)),
     }
+    return json({'code': 0, 'msg': '获取成功', 'data': {}})
     res = await services.staff.lists(request, row)
     # 全部获取，返回总条数
     # 发送
 
 @staff.get("/test")  # 测试token过期
-@protected
+# @protected
 async def test(request):    return json({'code': 0, 'msg': 'token验证成功'})
