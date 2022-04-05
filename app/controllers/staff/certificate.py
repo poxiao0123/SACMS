@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
+from asyncio import constants
+
 from app.services import services
 from sanic import Blueprint
 from sanic.response import json
 from sanic_validation import validate_args, validate_json
-from this import d
 
 certificate = Blueprint("certificate", url_prefix="/staff/certificate")
 
@@ -31,6 +32,7 @@ async def lists(request):
     c_name = request.json.get("c_name")
     s_id = request.json.get("s_id")
     res = None
+    print(s_id)
     if c_id:
         res = await services.certificate.list_by_c_id(request, c_id)
         if res:
@@ -46,32 +48,13 @@ async def lists(request):
     elif c_name:
         res = await services.certificate.list_by_c_name(request, c_name)
         if res:
-            # 初始化data数组
-            data = {
-                "c_id": [],
-                "c_imgpath": [],
-                "s_id": [],
-                "s_name": []
-            }
-            for item in res:
-                data["c_id"].append(item[0])
-                data["c_imgpath"].append(item[1])
-                data["s_id"].append(item[2])
-                data["s_name"].append(item[3])
-            print(data)
-            return json({"code": 0, "msg": "查询成功", "data": data})
+            return json({"code": 0, "msg": "查询成功", "data": res})
         else:
             return json({"code": -1, "msg": "查询失败"})
     elif s_id:
         res = await services.certificate.list_by_s_id(request, s_id)
         if res:
-            data = {
-                "c_id": res[0],
-                "c_name": res[1],
-                "c_imgpath": res[2],
-                "s_id": res[3]
-            }
-            return json({"code": 0, "msg": "查询成功", "data": data})
+            return json({"code": 0, "msg": "查询成功", "data": res})
         else:
             return json({"code": -1, "msg": "查询失败"})
     else:
@@ -80,14 +63,17 @@ async def lists(request):
 
 @certificate.post("/add")  # 添加证件 1
 async def add(request):
-    c_name = request.form.get("c_name")  # 获取证件名
-    s_id = request.form.get("s_id")  # 获取员工姓名
-    c_imgs = request.files.get("c_imgs")  # 获取证件照片
+    s_id = request.form.get("s_id")
+    c_name = request.form.get("c_name")
+    c_img = list(request.files.get("file"))
     row = {
         "c_name": c_name,
-        "s_id": s_id
+        "s_id": s_id,
+        "c_img": c_img
     }
-    res = await services.certificate.add(request, c_imgs, row)
+    print(row)
+    res = await services.certificate.add(request, row)
+    print(res)
     return json({"code": 0, "msg": "上传成功"}) \
         if res > 0 else json({"code": -1, "msg": "上传失败"})
 
@@ -126,3 +112,7 @@ async def change(request):
         return json({"code": 0, "msg": "修改成功"})
     else:
         return json({"code": -1, "msg": "修改失败"})
+
+
+
+    

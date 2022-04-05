@@ -42,7 +42,6 @@ async def lists(request):
 
 
 @staff.post("/add")  # 添加职工1
-# @protected
 @validate_json(
     {
         "name": {"type": "string", "required": True},
@@ -85,10 +84,11 @@ async def add(request):
         "job": request.json.get("job"),
     }
     row["birth"] = row["birth"].split("T")[0]
+    print(row)
     res = await services.staff.add(request, row)
     print(res)
-    if res == 0:
-        return json({"code": 0, "msg": "添加成功"})
+    if res >= 0:
+        return json({"code": 0, "msg": "添加成功", 'data': {'s_id': res}})
     elif res == -1:
         return json({"code": -1, "msg": "重复添加"})
     else:
@@ -133,23 +133,19 @@ async def change(request):
 
 
 @staff.post("/lists")  # 获取职工列表
-# @protected
 @validate_json(
     {
         "currentpage": {"type": "integer", "required": False},  # 当前第几页
         "listrows": {"type": "integer", "required": False},  # 每页多少行
     }
 )
-async def getStaffLists(request):
+async def lists(request):
     row = {
         "curpage": int(request.json.get("currentpage", 1)),
         "listrows": int(request.json.get("listrows", 10)),
     }
-    return json({'code': 0, 'msg': '获取成功', 'data': {}})
     res = await services.staff.lists(request, row)
-    # 全部获取，返回总条数
-    # 发送
-
-@staff.get("/test")  # 测试token过期
-# @protected
-async def test(request):    return json({'code': 0, 'msg': 'token验证成功'})
+    if res:
+        return json({'code': 0, 'msg': '获取成功', 'data': res })
+    else:
+        return json({'code': -1, 'msg': '获取失败'})

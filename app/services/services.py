@@ -5,13 +5,37 @@ from sqlalchemy import func, select
 
 
 class Staff:  # 员工类 1
+    async def lists(self, request, row):  # 获取所有员工数据
+        conn = request.app.ctx.db
+        query = (
+            select(['*'])
+            .select_from(staff)
+            .limit(row["listrows"])
+            .offset(int(row['curpage'] -1) * row["listrows"])
+        )
+        res = await conn.fetch_all(query=query)
+        results = []
+        for item in res:
+            item = list(item)
+            staff_items = ["id", "name", "cardnum", "mobile", "email", "sex", "province", "city", "area", "nation", "birth", "marriage", "department", "job"]
+            result = {}
+            for i in range(len(staff_items)):
+                result[staff_items[i]] = item[i]
+            results.append(result)
+        print(results)
+        return results
+
     async def add(self, request, row):  # 添加新员工数据 1
         conn = request.app.ctx.db
         try:
             query = staff.insert().values(**row)
             print(query)
             await conn.execute(query=query)
-            return 0
+            query = staff.select(staff.c.id).where(staff.c.cardnum == row["cardnum"])
+            res = await conn.fetch_one(query = query)
+            res = res[0]
+            print(res)
+            return res
         except Exception as e:
             print(type(e))
             if "Duplicate" in str(e):
@@ -82,24 +106,30 @@ class Staff:  # 员工类 1
         }
 
 class Certificate:
-    async def add(self, request, c_imgs, row):  # 添加员工证件 1
+    async def add(self, request, row):  # 添加员工证件 1
         try:
             # 1 创建图片目录
             basepath = os.getcwd()
             c_folder = os.path.join(basepath, "static", row["s_id"])
-            print("c_imgpath", "-" * 10, c_folder)
+            print("c_folder", "-" * 10, c_folder)
             folder = os.path.exists(c_folder)
             if not folder:
                 os.makedirs(c_folder)
-            img_ext = c_imgs.name.split('.')[-1]
-            c_imgpath = c_folder + "\\" + row["c_name"] + "." + img_ext
+            print(row['c_img'][2])
+            img_ext = row['c_img'][2].split('.')[-1]
+            c_imgpath = c_folder + "/" + row["c_name"] + "." + img_ext
+            print("c_imgpath", "-" * 10, c_imgpath)
             # 2 写入文件
             with open(c_imgpath, "wb") as fw:
-                fw.write(c_imgs.body)
-                conn = request.app.ctx.db
+                fw.write(row['c_img'][1])
             # 3 写入数据库
-            row["c_imgpath"] = c_imgpath
-            query = certificate.insert().values(**row)
+            conn = request.app.ctx.db
+            newrow = {
+                "c_name": row['c_name'],
+                "c_imgpath": c_imgpath,
+                "s_id": row["s_id"]
+            }
+            query = certificate.insert().values(**newrow)
             print(query)
             res = await conn.execute(query=query)
             return True if res > 0 else False
@@ -179,8 +209,17 @@ class Certificate:
             .select_from(certificate)
             .where(certificate.c.s_id == row)
         )
-        res = list(await conn.fetch_all(query=query))
-        print(res)
+        res = await conn.fetch_all(query=query)
+        results = []
+        for item in res:
+            item = list(item)
+            cert_items = ["c_id", "c_name", "c_imgpath", "s_id"]
+            result = {}
+            for i in range(len(cert_items)):
+                result[cert_items[i]] = item[i]
+            results.append(result)
+        # print(results)
+        return results
 
     async def getImg(self, request, row):  # 获取图片
         return 0
