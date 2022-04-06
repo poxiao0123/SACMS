@@ -2,21 +2,20 @@ from app.services import services
 # from middleware.auth import protected
 from sanic import Blueprint
 from sanic.response import json
-from sanic_validation import validate_args, validate_json
+from sanic_validation import validate_json
 
 staff = Blueprint("staff", url_prefix="/staff/")
 
 
-@staff.get("/remove")  # 删除员工1
-# @protected
-@validate_args(
+@staff.post("/remove")  # 删除员工1
+@validate_json(
     {
-        "id": {"type": "string", "required": True},
+        "id": {"type": "integer", "required": True},
     }
 )
 async def remove(request):
     row = {
-        "id": int(request.args.get("id", 0)),
+        "id": int(request.json.get("id", 0)),
     }
     res = await services.staff.remove(request, row)
     if res:
@@ -26,7 +25,6 @@ async def remove(request):
 
 
 @staff.post("/list")  # 获取员工详细信息1
-# @protected
 @validate_json(
     {
         "id": {"type": "string", "required": True},  # 职工号
@@ -96,7 +94,6 @@ async def add(request):
 
 
 @staff.post("/change")  # 修改职工信息 1
-# @protected
 @validate_json(
     {
         "id": {"type": "integer", "required": True},
@@ -145,7 +142,4 @@ async def lists(request):
         "listrows": int(request.json.get("listrows", 10)),
     }
     res = await services.staff.lists(request, row)
-    if res:
-        return json({'code': 0, 'msg': '获取成功', 'data': res })
-    else:
-        return json({'code': -1, 'msg': '获取失败'})
+    return json({'code': 0, 'msg': '获取成功', 'data': res })

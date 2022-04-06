@@ -1,4 +1,6 @@
 import os
+import shutil
+import uuid
 
 from app.models.mysql import certificate, staff
 from sqlalchemy import func, select
@@ -65,8 +67,15 @@ class Staff:  # 员工类 1
         try:
             query = staff.delete().where(staff.c.id == row["id"])
             res = await conn.execute(query=query)
-            print(res)
-            return True if res == 1 else False
+            if res == 1:
+                basepath = os.getcwd()
+                stafffilepath =  os.path.join(basepath, "static", str(row["id"]))
+                print(stafffilepath)
+                # 删除员工照片和目录
+                shutil.rmtree(stafffilepath)
+                return True
+            else:
+                return False
         except Exception as e:
             print(e)
             return False
@@ -111,14 +120,12 @@ class Certificate:
             # 1 创建图片目录
             basepath = os.getcwd()
             c_folder = os.path.join(basepath, "static", row["s_id"])
-            print("c_folder", "-" * 10, c_folder)
             folder = os.path.exists(c_folder)
             if not folder:
                 os.makedirs(c_folder)
-            print(row['c_img'][2])
             img_ext = row['c_img'][2].split('.')[-1]
-            c_imgpath = c_folder + "/" + row["c_name"] + "." + img_ext
-            print("c_imgpath", "-" * 10, c_imgpath)
+            imgname = ''.join(str(uuid.uuid4()).split('-'))
+            c_imgpath = c_folder + "/" + imgname + "." + img_ext
             # 2 写入文件
             with open(c_imgpath, "wb") as fw:
                 fw.write(row['c_img'][1])
@@ -126,7 +133,7 @@ class Certificate:
             conn = request.app.ctx.db
             newrow = {
                 "c_name": row['c_name'],
-                "c_imgpath": c_imgpath,
+                "c_imgpath": imgname + "." + img_ext,
                 "s_id": row["s_id"]
             }
             query = certificate.insert().values(**newrow)
@@ -138,25 +145,23 @@ class Certificate:
             return False
 
     async def remove(self, request, row):  # 删除员工证件 1
+        # 删除证件信息
         conn = request.app.ctx.db
-        # 1 获取图片目录
-        query = (
-            select([certificate.c.c_imgpath])
-            .select_from(certificate)
-            .where(certificate.c.c_id == row["c_id"])
-        )
-        c_imgpath = list(await conn.fetch_one(query=query))[0]
-        # 2 删除数据
         query = certificate.delete().where(certificate.c.c_id == row["c_id"])
         res = await conn.execute(query=query)
+        basepath = os.getcwd()
+        c_folder = os.path.join(basepath, "static", str(row["s_id"]))
+        c_imgpath = c_folder + "/" + row["c_imgpath"]
         if res > 0:
-            # 3 删除图片
+            # 3 删除图片,并判断文件夹是否为空，为空则删除文件夹
             try:
                 os.remove(c_imgpath)
+                if not os.listdir(c_folder):
+                    os.rmdir(c_folder)
+                return True
             except Exception as e:
                 print(e)
                 return False
-            return True
         else:
             return False
 
@@ -175,6 +180,27 @@ class Certificate:
             return False
         else:
             return True
+
+    async def lists(self, request, row):
+        conn = request.app.ctx.db
+        query = (
+            r"select c.c_id, c.c_name, c.c_imgpath, c.s_id, s.name, s.department, s.job "
+            r"from certificate as c "
+            r"inner join staff as s "
+            r"on c.s_id=s.id "
+            "limit {} offset {}".format(row["listrows"],int(row['curpage'] -1) * row["listrows"])
+        )
+        res = await conn.fetch_all(query=query)
+        results = []
+        for item in res:
+            item = list(item)
+            cert_items = ['c_id', 'c_name', 'c_imgpath', 's_id', 's_name', 's_department', 's_job']
+            result = {}
+            for i in range(len(cert_items)):
+                result[cert_items[i]] = item[i]
+            results.append(result)
+        print(results)
+        return results
 
     async def list_by_c_id(self, request, row):  # 按照证件id获取 1
         conn = request.app.ctx.db
@@ -221,5 +247,7 @@ class Certificate:
         # print(results)
         return results
 
-    async def getImg(self, request, row):  # 获取图片
-        return 0
+    async def getImg(self, request, row):  # 拼接图片地址
+        basepath = os.getcwd()
+        imgpath = os.path.join(basepath, "static", row["s_id"]) + "/" + row["c_imgpath"]
+        return imgpath
