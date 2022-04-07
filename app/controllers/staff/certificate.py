@@ -30,6 +30,8 @@ async def remove(request):
 @certificate.post("/lists")  # 获取所有证件信息
 @validate_json(
     {
+        "searchKey": {"type": "string", "required": False},
+        "searchValue": {"required": False},
         "currentpage": {"type": "integer", "required": False},  # 当前第几页
         "listrows": {"type": "integer", "required": False},  # 每页多少行
     }
@@ -39,6 +41,10 @@ async def lists(request):
         "curpage": int(request.json.get("currentpage", 1)),
         "listrows": int(request.json.get("listrows", 10)),
     }
+    if request.json.get("searchKey"):
+        row["searchKey"] = 'c_' + request.json.get("searchKey").split('_')[-1]
+        row["searchValue"] = request.json.get("searchValue")
+    print("______\n\n\n",row)
     res = await services.certificate.lists(request, row)
     return json({'code': 0, 'msg': '获取成功', 'data': res })
 

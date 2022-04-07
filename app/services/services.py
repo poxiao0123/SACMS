@@ -1,6 +1,7 @@
 import os
 import shutil
 import uuid
+from re import search
 
 from app.models.mysql import certificate, staff
 from sqlalchemy import func, select
@@ -9,12 +10,25 @@ from sqlalchemy import func, select
 class Staff:  # 员工类 1
     async def lists(self, request, row):  # 获取所有员工数据
         conn = request.app.ctx.db
-        query = (
-            select(['*'])
-            .select_from(staff)
-            .limit(row["listrows"])
-            .offset(int(row['curpage'] -1) * row["listrows"])
-        )
+        # 判断是否为特定条件查询
+        if "searchKey" in row:
+            searchKey = row["searchKey"]
+            searchValue = row["searchValue"]
+            listrows = int(row["listrows"])
+            curpage = int(row['curpage'])
+            query = r"select * from staff "
+            where = f"where {searchKey}='{searchValue}' "
+            limit = f"limit {listrows} "
+            offset = f"offset {(curpage -1) * listrows}"
+            query = query + where + limit + offset
+            print(query)
+        else:
+            query = (
+                select(['*'])
+                .select_from(staff)
+                .limit(row["listrows"])
+                .offset(int(row['curpage'] -1) * row["listrows"])
+            )
         res = await conn.fetch_all(query=query)
         results = []
         for item in res:
@@ -183,13 +197,31 @@ class Certificate:
 
     async def lists(self, request, row):
         conn = request.app.ctx.db
-        query = (
-            r"select c.c_id, c.c_name, c.c_imgpath, c.s_id, s.name, s.department, s.job "
-            r"from certificate as c "
-            r"inner join staff as s "
-            r"on c.s_id=s.id "
-            "limit {} offset {}".format(row["listrows"],int(row['curpage'] -1) * row["listrows"])
-        )
+        # 判断是否为特定条件查询
+        if "searchKey" in row:
+            searchKey = row["searchKey"]
+            searchValue = row["searchValue"]
+            listrows = int(row["listrows"])
+            curpage = int(row['curpage'])
+            query = (
+                r"select c.c_id, c.c_name, c.c_imgpath, c.s_id, s.name, s.department, s.job "
+                r"from certificate as c "
+                r"inner join staff as s "
+                r"on c.s_id=s.id "
+            )
+            where = f"where {searchKey}='{searchValue}' "
+            limit = f"limit {listrows} "
+            offset = f"offset {(curpage -1) * listrows}"
+            query = query + where + limit + offset
+            print(query)
+        else:
+            query = (
+                r"select c.c_id, c.c_name, c.c_imgpath, c.s_id, s.name, s.department, s.job "
+                r"from certificate as c "
+                r"inner join staff as s "
+                r"on c.s_id=s.id "
+                "limit {} offset {}".format(row["listrows"],int(row['curpage'] -1) * row["listrows"])
+            )
         res = await conn.fetch_all(query=query)
         results = []
         for item in res:

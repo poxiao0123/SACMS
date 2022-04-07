@@ -132,6 +132,8 @@ async def change(request):
 @staff.post("/lists")  # 获取职工列表
 @validate_json(
     {
+        "searchKey": {"type": "string", "required": False},
+        "searchValue": {"required": False},
         "currentpage": {"type": "integer", "required": False},  # 当前第几页
         "listrows": {"type": "integer", "required": False},  # 每页多少行
     }
@@ -141,5 +143,8 @@ async def lists(request):
         "curpage": int(request.json.get("currentpage", 1)),
         "listrows": int(request.json.get("listrows", 10)),
     }
+    if request.json.get("searchKey"):
+        row["searchKey"] = request.json.get("searchKey").split('_')[-1]
+        row["searchValue"] = request.json.get("searchValue")
     res = await services.staff.lists(request, row)
     return json({'code': 0, 'msg': '获取成功', 'data': res })
