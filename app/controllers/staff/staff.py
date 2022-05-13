@@ -2,20 +2,15 @@ from app.services import services
 # from middleware.auth import protected
 from sanic import Blueprint
 from sanic.response import json
-from sanic_validation import validate_json
+from sanic_validation import validate_args, validate_json
 
 staff = Blueprint("staff", url_prefix="/staff/")
 
 
-@staff.post("/remove")  # 删除员工1
-@validate_json(
-    {
-        "id": {"type": "integer", "required": True},
-    }
-)
-async def remove(request):
+@staff.delete("/<s_id:int>")  # 删除员工1
+async def remove(request, s_id):
     row = {
-        "id": int(request.json.get("id", 0)),
+        "s_id": s_id
     }
     res = await services.staff.remove(request, row)
     if res:
@@ -24,24 +19,21 @@ async def remove(request):
         return json({"code": -1, "msg": "删除失败"})
 
 
-@staff.post("/list")  # 获取员工详细信息1
-@validate_json(
-    {
-        "id": {"type": "string", "required": True},  # 职工号
-    }
-)
-async def lists(request):
-    row = {"id": int(request.json.get("id"))}
+@staff.get("/<id:int>")  # 获取员工详细信息1
+async def list(request, id):
+    row = {"id" : id }
     res = await services.staff.list(request, row)
+    print(row)
     if res:
         return json({"code": 0, "msg": "查询成功", "data": res})
     else:
         return json({"code": -1, "msg": "查询失败"})
 
 
-@staff.post("/add")  # 添加职工1
+@staff.post("/")  # 添加职工1
 @validate_json(
     {
+        "s_id": {"type": "string", "required": True},
         "name": {"type": "string", "required": True},
         "cardnum": {
             "type": "string",
@@ -67,6 +59,7 @@ async def lists(request):
 )
 async def add(request):
     row = {
+        "s_id": request.json.get("s_id"),
         "name": request.json.get("name"),
         "cardnum": request.json.get("cardnum"),
         "mobile": request.json.get("mobile"),
@@ -81,10 +74,7 @@ async def add(request):
         "department": request.json.get("department"),
         "job": request.json.get("job"),
     }
-    row["birth"] = row["birth"].split("T")[0]
-    print(row)
     res = await services.staff.add(request, row)
-    print(res)
     if res >= 0:
         return json({"code": 0, "msg": "添加成功", 'data': {'s_id': res}})
     elif res == -1:
@@ -93,7 +83,7 @@ async def add(request):
         return json({"code": -2, "msg": "添加失败"})
 
 
-@staff.post("/change")  # 修改职工信息 1
+@staff.patch("/")  # 修改职工信息 1
 @validate_json(
     {
         "id": {"type": "integer", "required": True},
@@ -115,7 +105,6 @@ async def add(request):
     }
 )
 async def change(request):
-    print(request)
     items = ["id", "name", "mobile", "email", "marriage", "department", "job"]
     row = {}
     for item in items:
@@ -144,7 +133,7 @@ async def lists(request):
         "listrows": int(request.json.get("listrows", 10)),
     }
     if request.json.get("searchKey"):
-        row["searchKey"] = request.json.get("searchKey").split('_')[-1]
+        row["searchKey"] = request.json.get("searchKey")
         row["searchValue"] = request.json.get("searchValue")
     res = await services.staff.lists(request, row)
     return json({'code': 0, 'msg': '获取成功', 'data': res })

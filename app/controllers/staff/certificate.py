@@ -1,25 +1,16 @@
 # -*- coding: utf-8 -*-
 from app.services import services
 from sanic import Blueprint
-from sanic.response import file, json
+from sanic.response import json, raw
 from sanic_validation import validate_json
 
 certificate = Blueprint("certificate", url_prefix="/staff/certificate")
 
 
-@certificate.post("/remove")  # 移除证件 1
-@validate_json(
-    {
-        "c_id": {"type": "integer", "required": True},
-        "c_imgpath": {"type": "string", "required": True},
-        "s_id": {"type": "integer", "required": True}
-    }
-)
-async def remove(request):
+@certificate.delete("/<c_id:int>")  # 移除证件 1
+async def remove(request, c_id):
     row = {
-        "c_id": int(request.json.get("c_id", 0)),
-        "c_imgpath": request.json.get("c_imgpath"),
-        "s_id": request.json.get("s_id",0)
+        "c_id": c_id
     }
     res = await services.certificate.remove(request, row)
     if res:
@@ -42,9 +33,9 @@ async def lists(request):
         "listrows": int(request.json.get("listrows", 10)),
     }
     if request.json.get("searchKey"):
-        row["searchKey"] = 'c_' + request.json.get("searchKey").split('_')[-1]
+        row["searchKey"] = request.json.get("searchKey")
         row["searchValue"] = request.json.get("searchValue")
-    print("______\n\n\n",row)
+    print(row)
     res = await services.certificate.lists(request, row)
     return json({'code': 0, 'msg': '获取成功', 'data': res })
 
@@ -87,66 +78,39 @@ async def list_cert(request):
 
 @certificate.post("/add")  # 添加证件 1
 async def add(request):
+    c_id = request.form.get("c_id")
     s_id = request.form.get("s_id")
     c_name = request.form.get("c_name")
-    c_img = list(request.files.get("file"))
-    print(c_img)
+    c_stime = request.form.get("c_stime")
+    c_etime = request.form.get("c_etime")
+    c_img = list(request.files.get("file"))[1]
     row = {
+        "c_id" : c_id,
         "c_name": c_name,
+        "c_stime" : c_stime,
+        "c_etime" : c_etime,
         "s_id": s_id,
         "c_img": c_img
     }
+    print("\n"*10)
     print(row)
     res = await services.certificate.add(request, row)
-    print("_________",res)
-    if res:
+    if res == 0:
         return json({"code": 0, "msg": "上传成功"})
+    elif res == -2:
+        return json({"code": -2, "msg": "职工号不存在"})
     else:
         return json({"code": -1, "msg": "上传失败"})
 
-
-@certificate.post("/change")
-@validate_json(
-    {
-        "id": {"type": "integer", "required": True},
-        "nickname": {"type": "string", "required": False},
-        "mobile": {
-            "type": "string",
-            "required": False,
-            "regex": r"^1[13456789]\d{9}$",
-        },
-        "sex": {"type": "integer", "required": False, "allowed": [0, 1]},
-        "province": {"type": "string", "required": False},
-        "city": {"type": "string", "required": False},
-        "area": {"type": "string", "required": False},
-    }
-)
-async def change(request):
+@certificate.get("/img/<id:int>")
+async def getImg(request, id: int):
+    print("\n"* 10)
+    print("获取图片")
     row = {
-        "id": request.json.get("id"),
-        "nickname": request.json.get("nickname"),
-        "mobile": request.json.get("mobile"),
-        "sex": request.json.get("sex"),
-        "province": request.json.get("province"),
-        "city": request.json.get("json"),
-        "area": request.json.get("area"),
-    }
-    for k in row.keys():
-        if not row[k]:
-            del row[k]
-    res = await services.certificate.change(request, row)
-    if res:
-        return json({"code": 0, "msg": "修改成功"})
-    else:
-        return json({"code": -1, "msg": "修改失败"})
-
-@certificate.get("/img/<s_id>/<c_imgpath>")
-async def getImg(request, s_id, c_imgpath):
-    row = {
-        's_id': s_id,
-        'c_imgpath': c_imgpath
+        "id" : id
     }
     res = await services.certificate.getImg(request, row)
-    return await file(res)
-
-    
+    if res:
+        return raw(res)
+    else:
+        return json({"code": -1, "msg": "获取失败"})
